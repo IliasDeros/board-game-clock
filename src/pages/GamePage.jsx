@@ -5,7 +5,6 @@ import { useClockTick } from '../hooks/useClockTick';
 import { PlayerZone } from '../components/PlayerZone';
 import { Controls } from '../components/Controls';
 import { ReorderList } from '../components/ReorderList';
-import { EditPlayerModal } from '../components/EditPlayerModal';
 import * as transactions from '../state/gameTransactions';
 
 export function GamePage() {
@@ -13,7 +12,6 @@ export function GamePage() {
   const { game, error, notFound } = useGameDoc(gameId);
   const { displayedRemainingMs } = useClockTick(game);
   const [reordering, setReordering] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState(null);
   const [actionError, setActionError] = useState(null);
 
   function runAction(promise) {
@@ -31,7 +29,7 @@ export function GamePage() {
   if (!game) return <p>Loading...</p>;
 
   return (
-    <div className="game-page">
+    <div className={`game-page${game.status === 'paused' ? ' paused' : ''}`}>
       {actionError && (
         <div className="action-error">
           {actionError}
@@ -42,6 +40,8 @@ export function GamePage() {
         <ReorderList
           players={game.players}
           onMove={(newOrder) => runAction(transactions.reorder(gameId, newOrder))}
+          onRename={(playerId, name) => runAction(transactions.renamePlayer(gameId, playerId, name))}
+          onSetTime={(playerId, remainingMs) => runAction(transactions.setPlayerTime(gameId, playerId, remainingMs))}
           onDone={() => setReordering(false)}
         />
       ) : (
@@ -54,7 +54,6 @@ export function GamePage() {
               displayedMs={displayedRemainingMs(player, index)}
               status={game.status}
               onTap={(playerId) => runAction(transactions.endTurn(gameId, playerId))}
-              onEdit={setEditingPlayer}
             />
           ))}
         </div>
@@ -68,16 +67,6 @@ export function GamePage() {
         reordering={reordering}
         shareUrl={window.location.href}
       />
-      {editingPlayer && (
-        <EditPlayerModal
-          player={editingPlayer}
-          onSave={({ name, remainingMs }) => {
-            runAction(transactions.renamePlayer(gameId, editingPlayer.id, name));
-            runAction(transactions.setPlayerTime(gameId, editingPlayer.id, remainingMs));
-          }}
-          onClose={() => setEditingPlayer(null)}
-        />
-      )}
     </div>
   );
 }

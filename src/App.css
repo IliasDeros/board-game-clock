@@ -3,6 +3,10 @@
   --bg-grad-mid: #e6ebf7;
   --bg-grad-end: #dee6f3;
 
+  --paused-grad-start: #fdf6e3;
+  --paused-grad-mid: #f9ecc7;
+  --paused-grad-end: #f3dfa0;
+
   --ink: #2b3242;
   --ink-soft: #636a7d;
 
@@ -146,7 +150,16 @@ input, select {
 }
 
 /* Game (clock) page */
-.game-page { display: flex; flex-direction: column; height: 100%; }
+.game-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(160deg, var(--bg-grad-start) 0%, var(--bg-grad-mid) 50%, var(--bg-grad-end) 100%);
+  transition: background 0.4s ease;
+}
+.game-page.paused {
+  background: linear-gradient(160deg, var(--paused-grad-start) 0%, var(--paused-grad-mid) 50%, var(--paused-grad-end) 100%);
+}
 
 .action-error {
   display: flex;
@@ -231,7 +244,7 @@ input, select {
 }
 
 .reorder-list { list-style: none; padding: 1rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.reorder-list li {
+.reorder-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -239,8 +252,31 @@ input, select {
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
+  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
 }
-.reorder-list li span { flex: 1; font-family: var(--font-display); font-weight: 500; }
+.reorder-row.dragging {
+  background: var(--glass-strong);
+  box-shadow: var(--shadow-soft);
+  transform: scale(1.02);
+  z-index: 1;
+  position: relative;
+}
+.reorder-list:has(.reorder-row.dragging) .reorder-row:not(.dragging) {
+  opacity: 0.7;
+}
+.drag-handle {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.6rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  touch-action: none;
+  cursor: grab;
+  color: var(--ink-soft);
+}
+.drag-handle:active { cursor: grabbing; }
+.reorder-name-input { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 500; }
+.reorder-row .time-input { flex: 0 0 auto; }
+.reorder-done { display: flex; justify-content: flex-end; padding: 0.4rem 0; }
 
 .modal-backdrop {
   position: fixed;

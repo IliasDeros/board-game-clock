@@ -18,7 +18,7 @@ export function Controls({ status, onPause, onResume, onReset, onToggleReorder, 
   return (
     <div className="controls">
       {status === 'running' ? (
-        <button onClick={onPause}>Pause</button>
+        <button className="btn-primary" onClick={onPause}>Pause</button>
       ) : (
         <button className="btn-primary" onClick={onResume}>Resume</button>
       )}
