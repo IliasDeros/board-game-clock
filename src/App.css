@@ -65,7 +65,7 @@ button:active:not(:disabled) { transform: translateY(0); }
   color: #fff;
 }
 
-input {
+input, select {
   font-family: var(--font-body);
   font-size: 1rem;
   padding: 0.55rem 0.8rem;
@@ -73,6 +73,14 @@ input {
   border: 1px solid var(--glass-border);
   background: var(--glass);
   color: var(--ink);
+}
+
+/* Native time input (used for duration entry): force light color-scheme so
+   the browser's internal spinner/segment UI matches this light glass theme
+   instead of following the OS dark-mode setting. Reusable for any other
+   type="time" input added later. */
+.time-input {
+  color-scheme: light;
 }
 
 /* Brand wordmark */
