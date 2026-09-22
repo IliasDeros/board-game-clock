@@ -4,6 +4,7 @@ import { useGameDoc } from '../hooks/useGameDoc';
 import { useClockTick } from '../hooks/useClockTick';
 import { PlayerZone } from '../components/PlayerZone';
 import { Controls } from '../components/Controls';
+import { ReorderList } from '../components/ReorderList';
 import * as transactions from '../state/gameTransactions';
 
 export function GamePage() {
@@ -17,19 +18,27 @@ export function GamePage() {
 
   return (
     <div className="game-page">
-      <div className="player-zones">
-        {game.players.map((player, index) => (
-          <PlayerZone
-            key={player.id}
-            player={player}
-            isActive={index === game.activePlayerIndex}
-            displayedMs={displayedRemainingMs(player, index)}
-            status={game.status}
-            onTap={(playerId) => transactions.endTurn(gameId, playerId)}
-            onEdit={() => {}}
-          />
-        ))}
-      </div>
+      {reordering ? (
+        <ReorderList
+          players={game.players}
+          onMove={(newOrder) => transactions.reorder(gameId, newOrder)}
+          onDone={() => setReordering(false)}
+        />
+      ) : (
+        <div className="player-zones">
+          {game.players.map((player, index) => (
+            <PlayerZone
+              key={player.id}
+              player={player}
+              isActive={index === game.activePlayerIndex}
+              displayedMs={displayedRemainingMs(player, index)}
+              status={game.status}
+              onTap={(playerId) => transactions.endTurn(gameId, playerId)}
+              onEdit={() => {}}
+            />
+          ))}
+        </div>
+      )}
       <Controls
         status={game.status}
         onPause={() => transactions.pause(gameId)}
