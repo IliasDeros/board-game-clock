@@ -5,6 +5,7 @@ import { useClockTick } from '../hooks/useClockTick';
 import { PlayerZone } from '../components/PlayerZone';
 import { Controls } from '../components/Controls';
 import { ReorderList } from '../components/ReorderList';
+import { EditPlayerModal } from '../components/EditPlayerModal';
 import * as transactions from '../state/gameTransactions';
 
 export function GamePage() {
@@ -12,6 +13,7 @@ export function GamePage() {
   const { game, error } = useGameDoc(gameId);
   const { displayedRemainingMs } = useClockTick(game);
   const [reordering, setReordering] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState(null);
 
   if (error) return <p>Error loading game: {error.message}</p>;
   if (!game) return <p>Loading...</p>;
@@ -34,7 +36,7 @@ export function GamePage() {
               displayedMs={displayedRemainingMs(player, index)}
               status={game.status}
               onTap={(playerId) => transactions.endTurn(gameId, playerId)}
-              onEdit={() => {}}
+              onEdit={setEditingPlayer}
             />
           ))}
         </div>
@@ -48,6 +50,16 @@ export function GamePage() {
         reordering={reordering}
         shareUrl={window.location.href}
       />
+      {editingPlayer && (
+        <EditPlayerModal
+          player={editingPlayer}
+          onSave={({ name, remainingMs }) => {
+            transactions.renamePlayer(gameId, editingPlayer.id, name);
+            transactions.setPlayerTime(gameId, editingPlayer.id, remainingMs);
+          }}
+          onClose={() => setEditingPlayer(null)}
+        />
+      )}
     </div>
   );
 }
