@@ -19,7 +19,10 @@ function stateToUpdate(state) {
     players: state.players,
     activePlayerIndex: state.activePlayerIndex,
     status: state.status,
-    turnStartedAt: state.turnStartedAtMs === fsm.SERVER_NOW ? Timestamp.now() : null,
+    turnStartedAt:
+      state.turnStartedAtMs === fsm.SERVER_NOW ? Timestamp.now()
+      : state.turnStartedAtMs == null ? null
+      : Timestamp.fromMillis(state.turnStartedAtMs),
     initialMs: state.initialMs,
     expiresAt: Timestamp.fromMillis(Date.now() + EXPIRY_MS),
   };

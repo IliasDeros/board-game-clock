@@ -5,8 +5,13 @@ import { db } from '../firebase';
 export function useGameDoc(gameId) {
   const [game, setGame] = useState(null);
   const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    setGame(null);
+    setError(null);
+    setNotFound(false);
+
     const ref = doc(db, 'games', gameId);
     const unsubscribe = onSnapshot(
       ref,
@@ -14,8 +19,10 @@ export function useGameDoc(gameId) {
       (snap) => {
         if (!snap.exists()) {
           setGame(null);
+          setNotFound(true);
           return;
         }
+        setNotFound(false);
         const data = snap.data();
         setGame({
           players: data.players,
@@ -31,5 +38,5 @@ export function useGameDoc(gameId) {
     return unsubscribe;
   }, [gameId]);
 
-  return { game, error };
+  return { game, error, notFound };
 }

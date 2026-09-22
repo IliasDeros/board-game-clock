@@ -29,3 +29,6 @@ dist
 # Local orchestration workspace for subagent-driven-development (per-plan
 # ledgers, task briefs, review packages) — never meant to be committed.
 .superpowers/
+
+# Firebase CLI's local hosting cache directory
+.firebase/

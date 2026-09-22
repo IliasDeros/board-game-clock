@@ -21,9 +21,10 @@ export function useClockTick(game) {
   }, [game]);
 
   useEffect(() => {
+    if (game?.status !== 'running') return;
     const id = setInterval(() => forceRender((n) => n + 1), TICK_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [game?.status]);
 
   function displayedRemainingMs(player, index) {
     if (!game || game.status !== 'running' || index !== game.activePlayerIndex || !anchorRef.current) {

@@ -10,20 +10,38 @@ import * as transactions from '../state/gameTransactions';
 
 export function GamePage() {
   const { gameId } = useParams();
-  const { game, error } = useGameDoc(gameId);
+  const { game, error, notFound } = useGameDoc(gameId);
   const { displayedRemainingMs } = useClockTick(game);
   const [reordering, setReordering] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
+  const [actionError, setActionError] = useState(null);
+
+  function runAction(promise) {
+    promise.catch((err) => setActionError(err.message || 'Something went wrong'));
+  }
 
   if (error) return <p>Error loading game: {error.message}</p>;
+  if (notFound) {
+    return (
+      <p>
+        This game doesn&apos;t exist — it may have expired. <a href="/">Create a new one</a>
+      </p>
+    );
+  }
   if (!game) return <p>Loading...</p>;
 
   return (
     <div className="game-page">
+      {actionError && (
+        <div className="action-error">
+          {actionError}
+          <button onClick={() => setActionError(null)}>&times;</button>
+        </div>
+      )}
       {reordering ? (
         <ReorderList
           players={game.players}
-          onMove={(newOrder) => transactions.reorder(gameId, newOrder)}
+          onMove={(newOrder) => runAction(transactions.reorder(gameId, newOrder))}
           onDone={() => setReordering(false)}
         />
       ) : (
@@ -35,7 +53,7 @@ export function GamePage() {
               isActive={index === game.activePlayerIndex}
               displayedMs={displayedRemainingMs(player, index)}
               status={game.status}
-              onTap={(playerId) => transactions.endTurn(gameId, playerId)}
+              onTap={(playerId) => runAction(transactions.endTurn(gameId, playerId))}
               onEdit={setEditingPlayer}
             />
           ))}
@@ -43,9 +61,9 @@ export function GamePage() {
       )}
       <Controls
         status={game.status}
-        onPause={() => transactions.pause(gameId)}
-        onResume={() => transactions.resume(gameId)}
-        onReset={() => transactions.reset(gameId)}
+        onPause={() => runAction(transactions.pause(gameId))}
+        onResume={() => runAction(transactions.resume(gameId))}
+        onReset={() => runAction(transactions.reset(gameId))}
         onToggleReorder={() => setReordering((r) => !r)}
         reordering={reordering}
         shareUrl={window.location.href}
@@ -54,8 +72,8 @@ export function GamePage() {
         <EditPlayerModal
           player={editingPlayer}
           onSave={({ name, remainingMs }) => {
-            transactions.renamePlayer(gameId, editingPlayer.id, name);
-            transactions.setPlayerTime(gameId, editingPlayer.id, remainingMs);
+            runAction(transactions.renamePlayer(gameId, editingPlayer.id, name));
+            runAction(transactions.setPlayerTime(gameId, editingPlayer.id, remainingMs));
           }}
           onClose={() => setEditingPlayer(null)}
         />
