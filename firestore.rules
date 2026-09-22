@@ -2,7 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /games/{gameId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isValidGame(request.resource.data);
+      allow delete: if false;
     }
   }
+}
+
+function isValidGame(data) {
+  return data.players is list
+    && data.players.size() >= 2
+    && data.players.size() <= 12
+    && data.status in ['running', 'paused']
+    && data.activePlayerIndex is int
+    && data.activePlayerIndex >= 0
+    && data.activePlayerIndex < data.players.size()
+    && data.initialMs is number
+    && data.initialMs > 0
+    && data.expiresAt is timestamp;
 }
