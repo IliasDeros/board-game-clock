@@ -305,7 +305,11 @@ input, select {
 /* Homepage hero demo (decorative; see src/components/HeroDemo.jsx) */
 .hero-demo {
   width: 100%;
-  max-width: 560px;
+  /* Also capped by viewport height so the real form isn't pushed below the
+     fold on short laptop screens. It is a size container so the phone text
+     (cqi below) shrinks with the box, not with the viewport width. */
+  max-width: clamp(240px, 42vh, 560px);
+  container-type: inline-size;
   pointer-events: none;
   user-select: none;
 }
@@ -323,7 +327,7 @@ input, select {
   aspect-ratio: 9 / 16;
   padding: 0.7em;
   overflow: hidden;
-  font-size: clamp(0.5rem, 2vw, 0.75rem); /* everything inside scales in em */
+  font-size: clamp(0.5rem, 2.2cqi, 0.75rem); /* everything inside scales in em */
   background: var(--glass);
   backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
@@ -461,6 +465,11 @@ input, select {
   0% { left: 16.67%; opacity: 0; }
   15%, 85% { opacity: 1; }
   100% { left: 83.33%; opacity: 0; }
+}
+
+/* Landscape phones: the demo would fill the screen, so lead with the form. */
+@media (max-height: 480px) {
+  .hero-demo { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
