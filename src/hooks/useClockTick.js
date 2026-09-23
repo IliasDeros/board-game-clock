@@ -27,10 +27,17 @@ export function useClockTick(game) {
   }, [game?.status]);
 
   function displayedRemainingMs(player, index) {
-    if (!game || game.status !== 'running' || index !== game.activePlayerIndex || !anchorRef.current) {
+    // The anchor is (re)set in an effect, i.e. after the render that first sees
+    // a new snapshot. Ignore an anchor left over from a previous turn, or the
+    // new active player briefly shows their time minus the last turn's elapsed.
+    const anchor = anchorRef.current;
+    if (
+      !game || game.status !== 'running' || index !== game.activePlayerIndex ||
+      !anchor || anchor.turnStartedAtMs !== game.turnStartedAtMs
+    ) {
       return player.remainingMs;
     }
-    const elapsed = Date.now() - anchorRef.current.localAnchorMs;
+    const elapsed = Date.now() - anchor.localAnchorMs;
     return player.remainingMs - elapsed;
   }
 
