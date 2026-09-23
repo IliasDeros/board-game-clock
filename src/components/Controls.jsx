@@ -24,7 +24,7 @@ export function Controls({ status, onPause, onResume, onReset, onToggleReorder, 
       )}
       <button onClick={handleReset}>Reset</button>
       <button onClick={onToggleReorder} disabled={status !== 'paused'}>
-        {reordering ? 'Done Reordering' : 'Reorder Players'}
+        {reordering ? 'Done Editing' : 'Edit Players'}
       </button>
       <button onClick={copyLink}>{copied ? 'Copied!' : 'Link to Share'}</button>
     </div>

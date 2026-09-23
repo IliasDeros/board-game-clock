@@ -1,25 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-
-// Same HH:MM:SS <-> ms conversion approach as CreateGamePage.jsx's
-// parseTimeToMs, adapted for round-tripping an existing remainingMs value
-// into a native <input type="time" step="1"> field.
-function parseTimeToMs(value) {
-  if (!value) return null;
-  const parts = value.split(':').map(Number);
-  if (parts.length < 2) return null;
-  const [h, m, s = 0] = parts;
-  if ([h, m, s].some((n) => Number.isNaN(n))) return null;
-  return ((h * 3600) + (m * 60) + s) * 1000;
-}
-
-function msToTimeString(ms) {
-  const clamped = Math.max(0, ms);
-  const totalSeconds = Math.floor(clamped / 1000);
-  const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-  const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-  const s = (totalSeconds % 60).toString().padStart(2, '0');
-  return `${h}:${m}:${s}`;
-}
+import { formatMinutes, parseMinutes } from '../state/minutes';
 
 function ReorderRow({
   player, index, dragging, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
@@ -27,6 +7,9 @@ function ReorderRow({
 }) {
   const [draft, setDraft] = useState(player.name);
   const [focused, setFocused] = useState(false);
+  const shownTime = formatMinutes(player.remainingMs);
+  const [timeDraft, setTimeDraft] = useState(shownTime);
+  const [timeFocused, setTimeFocused] = useState(false);
 
   // Keep the local draft in sync with the live prop value, but only while
   // the field isn't focused -- otherwise an in-flight edit from another
@@ -35,8 +18,24 @@ function ReorderRow({
     if (!focused) setDraft(player.name);
   }, [player.name, focused]);
 
+  // Same guard as the name field, for the live remaining-time value.
+  useEffect(() => {
+    if (!timeFocused) setTimeDraft(shownTime);
+  }, [shownTime, timeFocused]);
+
   function commit() {
     if (draft !== player.name) onRename(player.id, draft);
+  }
+
+  function commitTime() {
+    const ms = parseMinutes(timeDraft);
+    // Unparseable or untouched: snap back to the live value rather than
+    // sending a bad update (or rounding the exact remaining time).
+    if (ms === null || timeDraft.trim() === shownTime) {
+      setTimeDraft(shownTime);
+      return;
+    }
+    onSetTime(player.id, ms);
   }
 
   return (
@@ -71,13 +70,19 @@ function ReorderRow({
         }}
       />
       <input
-        type="time"
-        step="1"
-        className="time-input"
-        value={msToTimeString(player.remainingMs)}
-        onChange={(e) => {
-          const ms = parseTimeToMs(e.target.value);
-          if (ms !== null) onSetTime(player.id, ms);
+        type="text"
+        inputMode="decimal"
+        className="minutes-input"
+        aria-label={`Minutes for ${player.name}`}
+        value={timeDraft}
+        onChange={(e) => setTimeDraft(e.target.value)}
+        onFocus={() => setTimeFocused(true)}
+        onBlur={() => {
+          setTimeFocused(false);
+          commitTime();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.target.blur();
         }}
       />
     </li>

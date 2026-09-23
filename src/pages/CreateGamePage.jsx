@@ -2,35 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createGame } from '../state/createGame';
 import { HeroDemo } from '../components/HeroDemo';
+import { formatMinutes } from '../state/minutes';
 
-const DEFAULT_TIME_VALUE = '00:10:00';
 const PLAYER_COUNT_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 2); // 2..10
-
-function parseTimeToMs(value) {
-  if (!value) return null;
-  const parts = value.split(':').map(Number);
-  if (parts.length < 2) return null;
-  const [h, m, s = 0] = parts;
-  if ([h, m, s].some((n) => Number.isNaN(n))) return null;
-  return ((h * 3600) + (m * 60) + s) * 1000;
-}
+const MINUTES_OPTIONS = [60, 120, 180, 210, 240, 300, 600, 900, 1800].map((seconds) => seconds * 1000);
+const DEFAULT_INITIAL_MS = 120000;
 
 export function CreateGamePage() {
   const [numPlayers, setNumPlayers] = useState(4);
-  const [timeValue, setTimeValue] = useState(DEFAULT_TIME_VALUE);
+  const [initialMs, setInitialMs] = useState(DEFAULT_INITIAL_MS);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
-  function handleTimeChange(e) {
-    const next = e.target.value;
-    // Defensively guard against an empty/unparseable value (e.g. the user
-    // clears the field): fall back to the last valid value instead of
-    // letting the state go bad.
-    if (parseTimeToMs(next) !== null) {
-      setTimeValue(next);
-    }
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -38,7 +21,6 @@ export function CreateGamePage() {
     setError('');
     try {
       const playerNames = Array.from({ length: numPlayers }, (_, i) => `Player ${i + 1}`);
-      const initialMs = parseTimeToMs(timeValue) ?? parseTimeToMs(DEFAULT_TIME_VALUE);
       const gameId = await createGame({ playerNames, initialMs });
       navigate(`/game/${gameId}`);
     } catch (err) {
@@ -70,11 +52,18 @@ export function CreateGamePage() {
             ))}
           </select>
         </label>
-        <label>
-          Starting time
-          <input type="time" step="1" className="time-input" required value={timeValue}
-            disabled={busy} onChange={handleTimeChange} />
-        </label>
+        <fieldset className="minutes-picker" disabled={busy}>
+          <legend>Minutes per player</legend>
+          <div className="minutes-grid">
+            {MINUTES_OPTIONS.map((ms) => (
+              <label key={ms} className="minutes-option">
+                <input type="radio" name="minutes" value={ms} checked={initialMs === ms}
+                  onChange={() => setInitialMs(ms)} />
+                <span>{formatMinutes(ms)}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         {error && <p className="form-error">{error}</p>}
         <button type="submit" className="btn-primary" disabled={busy}>Create clock</button>
       </form>

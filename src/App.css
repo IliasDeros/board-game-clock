@@ -79,14 +79,6 @@ input, select {
   color: var(--ink);
 }
 
-/* Native time input (used for duration entry): force light color-scheme so
-   the browser's internal spinner/segment UI matches this light glass theme
-   instead of following the OS dark-mode setting. Reusable for any other
-   type="time" input added later. */
-.time-input {
-  color-scheme: light;
-}
-
 /* Brand wordmark */
 .brand {
   display: inline-flex;
@@ -143,6 +135,58 @@ input, select {
   font-size: 0.9rem;
   color: var(--ink-soft);
 }
+.minutes-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.minutes-picker legend {
+  padding: 0;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+.minutes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+/* Radio inputs are visually hidden; the label acts as the button. */
+.create-card .minutes-option {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.minutes-option input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.minutes-option:has(input:checked) {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: #fff;
+}
+.minutes-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+.minutes-picker:disabled .minutes-option { opacity: 0.5; cursor: not-allowed; }
 .form-error {
   color: var(--ink-soft);
   font-size: 0.85rem;
@@ -275,7 +319,7 @@ input, select {
 }
 .drag-handle:active { cursor: grabbing; }
 .reorder-name-input { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 500; }
-.reorder-row .time-input { flex: 0 0 auto; }
+.reorder-row .minutes-input { flex: 0 0 4.5rem; width: 4.5rem; min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
 .reorder-done { display: flex; justify-content: flex-end; padding: 0.4rem 0; }
 
 .modal-backdrop {
