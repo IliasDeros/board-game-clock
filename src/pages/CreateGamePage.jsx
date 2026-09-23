@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createGame } from '../state/createGame';
+import { HeroDemo } from '../components/HeroDemo';
 
 const DEFAULT_TIME_VALUE = '00:10:00';
 const PLAYER_COUNT_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 2); // 2..10
@@ -48,6 +49,7 @@ export function CreateGamePage() {
 
   return (
     <div className="create-page">
+      <HeroDemo />
       <div className="brand">
         <span className="brand-mark" aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">

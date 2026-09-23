@@ -301,3 +301,171 @@ input, select {
   gap: 0.9rem;
   min-width: 260px;
 }
+
+/* Homepage hero demo (decorative; see src/components/HeroDemo.jsx) */
+.hero-demo {
+  width: 100%;
+  max-width: 560px;
+  pointer-events: none;
+  user-select: none;
+}
+.hero-phones {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap; /* three phones always stay in one row, even at 320px */
+  justify-content: center;
+  gap: clamp(0.4rem, 2.5vw, 1rem);
+}
+.hero-phone {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 170px;
+  aspect-ratio: 9 / 16;
+  padding: 0.7em;
+  overflow: hidden;
+  font-size: clamp(0.5rem, 2vw, 0.75rem); /* everything inside scales in em */
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.8em;
+  box-shadow: var(--shadow-soft), var(--shadow-inset);
+  opacity: 0.35;
+  transform: scale(0.92);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.hero-phone.lit {
+  opacity: 1;
+  transform: none;
+}
+
+.hero-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  height: 100%;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15em;
+}
+.hero-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45em 0.6em;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.8em;
+  color: var(--ink-soft);
+}
+.hero-field b {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.hero-fake-btn {
+  margin-top: auto;
+  text-align: center;
+  padding: 0.55em;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  transition: transform 0.15s ease;
+}
+.hero-fake-btn.pressed { transform: scale(0.92); }
+
+.hero-link-label {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.hero-link {
+  padding: 0.4em 0.5em;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.7em;
+  color: var(--accent-strong);
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hero-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+.hero-row {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.6em;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.9em;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.hero-row.active {
+  background: var(--active-grad);
+  border-color: var(--active-border);
+}
+.hero-row-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85em;
+}
+.hero-row-time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1em;
+  font-variant-numeric: tabular-nums;
+}
+.hero-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 2px solid var(--accent);
+  animation: hero-pulse 0.9s ease-out infinite;
+}
+@keyframes hero-pulse {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.1); opacity: 0; }
+}
+
+/* The "share" dots: one travels from phone 1 to phone 2, one to phone 3.
+   Phone centres sit at roughly 1/6, 1/2 and 5/6 of the row. */
+.hero-dot {
+  position: absolute;
+  top: 45%;
+  left: 16.67%;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  opacity: 0;
+  z-index: 2;
+  animation: hero-travel-1 1.6s ease-in-out forwards;
+}
+.hero-dot-2 { animation-name: hero-travel-2; }
+@keyframes hero-travel-1 {
+  0% { left: 16.67%; opacity: 0; }
+  15%, 85% { opacity: 1; }
+  100% { left: 50%; opacity: 0; }
+}
+@keyframes hero-travel-2 {
+  0% { left: 16.67%; opacity: 0; }
+  15%, 85% { opacity: 1; }
+  100% { left: 83.33%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-demo *, .hero-demo *::before, .hero-demo *::after {
+    transition: none;
+    animation: none;
+  }
+}
