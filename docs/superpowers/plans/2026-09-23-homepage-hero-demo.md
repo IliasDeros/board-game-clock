@@ -70,7 +70,7 @@ Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, co
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const { createServer } = await import(`${P}/node_modules/vite/dist/node/index.js`);
-const server = await createServer({ root: P, logLevel: 'error', server: { middlewareMode: true }, appType: 'custom' });
+const server = await createServer({ root: P, logLevel: 'error', server: { middlewareMode: true, watch: null }, appType: 'custom' });
 const React = (await import(`${P}/node_modules/react/index.js`)).default;
 const { createRoot } = await import(`${P}/node_modules/react-dom/client.js`);
 const { HeroDemo } = await server.ssrLoadModule('/src/components/HeroDemo.jsx');
@@ -385,7 +385,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const { createServer } = await import(`${P}/node_modules/vite/dist/node/index.js`);
 const server = await createServer({
-  root: P, logLevel: 'error', server: { middlewareMode: true }, appType: 'custom',
+  root: P, logLevel: 'error', server: { middlewareMode: true, watch: null }, appType: 'custom',
   ssr: { external: ['react-router-dom', 'react-router'] },
 });
 const React = (await import(`${P}/node_modules/react/index.js`)).default;
