@@ -153,43 +153,64 @@ input, select {
   font-size: 0.9rem;
   color: var(--ink-soft);
 }
-.minutes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-/* Radio inputs are visually hidden; the label acts as the button. */
-.create-card .minutes-option {
+.time-wheel {
+  --wheel-item: 2.5rem;
   position: relative;
-  flex-direction: row;
-  align-items: center;
+  display: flex;
   justify-content: center;
-  padding: 0.6rem 0;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  background: var(--glass);
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
+  gap: 1.5rem;
 }
-.minutes-option input {
+.time-wheel.disabled { opacity: 0.5; pointer-events: none; }
+/* Highlight strip behind the selected row, like the iOS picker. */
+.wheel-band {
   position: absolute;
-  opacity: 0;
-  inset: 0;
-  margin: 0;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--wheel-item);
+  transform: translateY(-50%);
+  border-radius: 10px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-inset);
+}
+.wheel-col {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.wheel {
+  height: calc(var(--wheel-item) * 5);
+  width: 3.5rem;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  padding-block: calc(var(--wheel-item) * 2);
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+  -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+  outline: none;
+}
+.wheel::-webkit-scrollbar { display: none; }
+.wheel:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: -2px; border-radius: 10px; }
+.wheel-item {
+  height: var(--wheel-item);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
   cursor: pointer;
+  user-select: none;
 }
-.minutes-option:has(input:checked) {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  border-color: transparent;
-  color: #fff;
-}
-.minutes-option:has(input:focus-visible) {
-  outline: 2px solid var(--accent-strong);
-  outline-offset: 2px;
-}
-.minutes-picker:disabled .minutes-option { opacity: 0.5; cursor: not-allowed; }
+.wheel-item.selected { color: var(--ink); font-weight: 600; }
+.wheel-unit { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
 .form-error {
   color: var(--ink-soft);
   font-size: 0.85rem;

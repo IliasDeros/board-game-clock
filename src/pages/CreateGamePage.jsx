@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createGame } from '../state/createGame';
 import { HeroDemo } from '../components/HeroDemo';
-import { formatMinutes } from '../state/minutes';
+import { TimeWheelPicker } from '../components/TimeWheelPicker';
 
 const PLAYER_COUNT_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 2); // 2..10
-const MINUTES_OPTIONS = [
-  30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 420, 480, 540, 600, 900, 1800,
-].map((seconds) => seconds * 1000);
 const DEFAULT_INITIAL_MS = 120000;
 
 export function CreateGamePage() {
@@ -55,19 +52,11 @@ export function CreateGamePage() {
           </select>
         </label>
         <fieldset className="minutes-picker" disabled={busy}>
-          <legend>Minutes per player</legend>
-          <div className="minutes-grid">
-            {MINUTES_OPTIONS.map((ms) => (
-              <label key={ms} className="minutes-option">
-                <input type="radio" name="minutes" value={ms} checked={initialMs === ms}
-                  onChange={() => setInitialMs(ms)} />
-                <span>{formatMinutes(ms)}</span>
-              </label>
-            ))}
-          </div>
+          <legend>Time per player</legend>
+          <TimeWheelPicker valueMs={initialMs} onChange={setInitialMs} disabled={busy} />
         </fieldset>
         {error && <p className="form-error">{error}</p>}
-        <button type="submit" className="btn-primary" disabled={busy}>Create clock</button>
+        <button type="submit" className="btn-primary" disabled={busy || initialMs <= 0}>Create clock</button>
       </form>
     </div>
   );
