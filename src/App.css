@@ -158,7 +158,7 @@ input, select {
   position: relative;
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 .time-wheel.disabled { opacity: 0.5; pointer-events: none; }
 /* Highlight strip behind the selected row, like the iOS picker. */
@@ -174,15 +174,10 @@ input, select {
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-inset);
 }
-.wheel-col {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
+.wheel-col { position: relative; }
 .wheel {
   height: calc(var(--wheel-item) * 5);
-  width: 3.5rem;
+  width: 6rem;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   padding-block: calc(var(--wheel-item) * 2);
@@ -200,7 +195,7 @@ input, select {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 0.5rem;
+  padding-right: 2.7rem;
   scroll-snap-align: center;
   scroll-snap-stop: always;
   font-size: 1.25rem;
@@ -210,7 +205,17 @@ input, select {
   user-select: none;
 }
 .wheel-item.selected { color: var(--ink); font-weight: 600; }
-.wheel-unit { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+.wheel-unit {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  /* Sits on top of the wheel: let drags and scrolls pass through to it. */
+  pointer-events: none;
+}
 .form-error {
   color: var(--ink-soft);
   font-size: 0.85rem;
