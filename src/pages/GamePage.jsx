@@ -9,13 +9,22 @@ import * as transactions from '../state/gameTransactions';
 
 export function GamePage() {
   const { gameId } = useParams();
-  const { game, error, notFound } = useGameDoc(gameId);
+  const { game, error, notFound, refresh } = useGameDoc(gameId);
   const { displayedRemainingMs } = useClockTick(game);
   const [reordering, setReordering] = useState(false);
   const [actionError, setActionError] = useState(null);
 
   function runAction(promise) {
-    promise.catch((err) => setActionError(err.message || 'Something went wrong'));
+    promise
+      .then((result) => {
+        if (result === 'ignored') {
+          // The server rejected the action against its newer state, so this
+          // device was out of date. Pull the latest state instead of staying stuck.
+          setActionError('The game had already changed, so that action was skipped. Showing the latest state.');
+          refresh();
+        }
+      })
+      .catch((err) => setActionError(err.message || 'Something went wrong'));
   }
 
   if (error) return <p>Error loading game: {error.message}</p>;
@@ -51,7 +60,7 @@ export function GamePage() {
               key={player.id}
               player={player}
               isActive={index === game.activePlayerIndex}
-              displayedMs={displayedRemainingMs(player, index)}
+              displayedMs={displayedRemainingMs(index)}
               status={game.status}
               onTap={(playerId) => runAction(transactions.endTurn(gameId, playerId))}
               onResume={() => runAction(transactions.resume(gameId))}

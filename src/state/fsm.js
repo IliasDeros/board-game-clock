@@ -1,7 +1,5 @@
 export class InvalidTransitionError extends Error {}
 
-export const SERVER_NOW = 'SERVER_NOW';
-
 // Starting time for the player at `index`: each seat after the first gets
 // `decrementMs` less than the one before it (never below zero).
 export function startingMs(initialMs, decrementMs, index) {
@@ -27,11 +25,20 @@ function nextIndex(state) {
   return (state.activePlayerIndex + 1) % state.players.length;
 }
 
+// Time left for the player at `index` as of `nowMs`. Callers pass server-clock
+// time, so the value shown on screen and the value committed when a turn ends
+// come from the same formula and the same clock. A `nowMs` slightly before
+// turnStartedAtMs (offset error) counts as zero elapsed, never negative.
+export function currentRemainingMs(state, index, nowMs) {
+  const player = state.players[index];
+  if (state.status !== 'running' || index !== state.activePlayerIndex || state.turnStartedAtMs == null) {
+    return player.remainingMs;
+  }
+  return player.remainingMs - Math.max(0, nowMs - state.turnStartedAtMs);
+}
+
 function deductElapsed(state, nowMs) {
-  const elapsed = nowMs - state.turnStartedAtMs;
-  return state.players.map((p, i) =>
-    i === state.activePlayerIndex ? { ...p, remainingMs: p.remainingMs - elapsed } : p
-  );
+  return state.players.map((p, i) => ({ ...p, remainingMs: currentRemainingMs(state, i, nowMs) }));
 }
 
 export function endTurn(state, { playerId, nowMs }) {
@@ -44,7 +51,7 @@ export function endTurn(state, { playerId, nowMs }) {
     ...state,
     players: deductElapsed(state, nowMs),
     activePlayerIndex: nextIndex(state),
-    turnStartedAtMs: SERVER_NOW,
+    turnStartedAtMs: nowMs,
   };
 }
 
@@ -58,9 +65,9 @@ export function pause(state, { nowMs }) {
   };
 }
 
-export function resume(state) {
+export function resume(state, { nowMs }) {
   if (state.status !== 'paused') throw new InvalidTransitionError('not paused');
-  return { ...state, status: 'running', turnStartedAtMs: SERVER_NOW };
+  return { ...state, status: 'running', turnStartedAtMs: nowMs };
 }
 
 export function reset(state) {

@@ -17,6 +17,7 @@ export function PlayerZone({ player, isActive, displayedMs, status, onTap, onRes
     >
       <div className="player-name">{player.name}</div>
       <div className="player-time">{negative ? '-' : ''}{mm}:{ss}</div>
+      {isActive && status === 'running' && <div className="player-prompt">Press to end turn</div>}
     </div>
   );
 }

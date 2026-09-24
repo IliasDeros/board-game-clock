@@ -337,7 +337,7 @@ input, select {
 .game-page {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
   background: linear-gradient(160deg, var(--bg-grad-start) 0%, var(--bg-grad-mid) 50%, var(--bg-grad-end) 100%);
   transition: background 0.4s ease;
 }
@@ -417,6 +417,22 @@ input, select {
   font-size: 2.75rem;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
+}
+
+.player-prompt {
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.75;
+  animation: prompt-pulse 2s ease-in-out infinite;
+}
+@keyframes prompt-pulse {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-prompt { animation: none; }
 }
 
 .controls {

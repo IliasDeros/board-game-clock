@@ -7,6 +7,16 @@ service cloud.firestore {
       allow write: if isValidGame(request.resource.data);
       allow delete: if false;
     }
+
+    // Clients write serverTimestamp() here and read it back to measure how far
+    // their clock is from the server's.
+    match /clockProbes/{clientId} {
+      allow get: if true;
+      allow create, update: if clientId.size() <= 32
+        && request.resource.data.keys().hasOnly(['t'])
+        && request.resource.data.t == request.time;
+      allow list, delete: if false;
+    }
   }
 }
 

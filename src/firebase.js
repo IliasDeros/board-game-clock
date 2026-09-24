@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { initializeFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,7 +11,10 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// Some networks and proxies buffer the streaming (WebChannel) connection, which
+// leaves a live listener silently stalled while ordinary requests still work.
+// Auto-detect makes the SDK fall back to long polling when that happens.
+export const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
 
 if (import.meta.env.VITE_USE_FIRESTORE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, 'localhost', 8080);
