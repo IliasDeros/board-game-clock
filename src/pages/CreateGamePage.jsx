@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createGame } from '../state/createGame';
 import { HeroDemo } from '../components/HeroDemo';
 import { TimeWheelPicker } from '../components/TimeWheelPicker';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 const PLAYER_COUNT_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 2); // 2..10
 const DEFAULT_INITIAL_MS = 120000;
@@ -33,14 +34,17 @@ export function CreateGamePage() {
   return (
     <div className="create-page">
       <HeroDemo />
-      <div className="brand">
-        <span className="brand-mark" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-            <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </span>
-        bg clock
+      <div className="brand-row">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </span>
+          bg clock
+        </div>
+        <ThemeToggle />
       </div>
       <form className="create-card" onSubmit={handleSubmit}>
         <h1>New game</h1>

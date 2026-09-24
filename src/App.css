@@ -33,6 +33,45 @@
 
   --font-display: 'Poppins', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
+
+  --brand: var(--accent-strong);
+  --modal-bg: var(--glass-strong);
+  --modal-backdrop: rgba(43, 50, 66, 0.35);
+  color-scheme: light;
+}
+
+/* Dark theme: set on <html> by src/state/theme.js (system default, user-overridable). */
+:root[data-theme='dark'] {
+  --bg-grad-start: #12152a;
+  --bg-grad-mid: #161a30;
+  --bg-grad-end: #1a2036;
+
+  --paused-grad-start: #2b2414;
+  --paused-grad-mid: #30281a;
+  --paused-grad-end: #392e1b;
+
+  --ink: #e9ebf5;
+  --ink-soft: #a4aabf;
+
+  --glass: rgba(255, 255, 255, 0.07);
+  --glass-strong: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.12);
+
+  --accent-soft: #58639f;
+
+  --active-grad: linear-gradient(135deg, #1f4a3c, #2a6552);
+  --active-border: rgba(126, 200, 170, 0.4);
+
+  --negative-grad: linear-gradient(135deg, #5a2a26, #7a3a34);
+  --negative-border: rgba(230, 150, 140, 0.45);
+
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.4);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  --brand: #a9b3f5;
+  --modal-bg: rgba(28, 33, 56, 0.94);
+  --modal-backdrop: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -90,7 +129,17 @@ input, select {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.1rem;
-  color: var(--accent-strong);
+  color: var(--brand);
+}
+.brand-row { display: flex; align-items: center; gap: 0.75rem; }
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: var(--brand);
 }
 .brand-mark {
   width: 1.4rem;
@@ -368,7 +417,7 @@ input, select {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(43, 50, 66, 0.35);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -377,7 +426,7 @@ input, select {
 }
 
 .modal {
-  background: var(--glass-strong);
+  background: var(--modal-bg);
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-soft);
@@ -478,7 +527,7 @@ input, select {
   background: var(--glass-strong);
   border: 1px solid var(--glass-border);
   border-radius: 0.7em;
-  color: var(--accent-strong);
+  color: var(--brand);
   font-size: 0.9em;
   white-space: nowrap;
   overflow: hidden;
