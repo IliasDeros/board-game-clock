@@ -5,7 +5,8 @@ import { HeroDemo } from '../components/HeroDemo';
 import { TimeWheelPicker } from '../components/TimeWheelPicker';
 import { ThemeToggle } from '../components/ThemeToggle';
 
-const PLAYER_COUNT_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 2); // 2..10
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 10;
 const DEFAULT_INITIAL_MS = 120000;
 
 export function CreateGamePage() {
@@ -48,14 +49,20 @@ export function CreateGamePage() {
       </div>
       <form className="create-card" onSubmit={handleSubmit}>
         <h1>New game</h1>
-        <label>
-          Players
-          <select value={numPlayers} disabled={busy}
-            onChange={(e) => setNumPlayers(Number(e.target.value))}>
-            {PLAYER_COUNT_OPTIONS.map((count) => (
-              <option key={count} value={count}>{count}</option>
-            ))}
-          </select>
+        <label className="players-slider">
+          <span className="players-slider-head">
+            Players
+            <output className="players-slider-value">{numPlayers}</output>
+          </span>
+          <input
+            type="range"
+            min={MIN_PLAYERS}
+            max={MAX_PLAYERS}
+            step={1}
+            value={numPlayers}
+            disabled={busy}
+            onChange={(e) => setNumPlayers(Number(e.target.value))}
+          />
         </label>
         <fieldset className="minutes-picker" disabled={busy}>
           <legend>Time per player</legend>
