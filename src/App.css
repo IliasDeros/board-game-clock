@@ -552,9 +552,8 @@ input, select {
   width: 2.4rem;
   height: 2.4rem;
   padding: 0;
-  color: var(--accent-strong);
+  color: var(--ink);
 }
-.reorder-row.sitting-out .playing-toggle { color: var(--ink-soft); }
 .reorder-row.sitting-out .reorder-name-input,
 .reorder-row.sitting-out .time-button { opacity: 0.5; }
 .reorder-name-input { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 500; }
