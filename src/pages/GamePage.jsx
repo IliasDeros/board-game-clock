@@ -58,15 +58,16 @@ export function GamePage() {
           ))}
         </div>
       )}
-      <Controls
-        status={game.status}
-        onPause={() => runAction(transactions.pause(gameId))}
-        onResume={() => runAction(transactions.resume(gameId))}
-        onReset={() => runAction(transactions.reset(gameId))}
-        onToggleReorder={() => setReordering((r) => !r)}
-        reordering={reordering}
-        shareUrl={window.location.href}
-      />
+      {!reordering && (
+        <Controls
+          status={game.status}
+          onPause={() => runAction(transactions.pause(gameId))}
+          onResume={() => runAction(transactions.resume(gameId))}
+          onReset={() => runAction(transactions.reset(gameId))}
+          onToggleReorder={() => setReordering(true)}
+          shareUrl={window.location.href}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,25 @@
 import { useState } from 'react';
 
-export function Controls({ status, onPause, onResume, onReset, onToggleReorder, reordering, shareUrl }) {
+function Icon({ children }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
+
+function StrokeIcon({ children }) {
+  return (
+    <svg
+      width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function Controls({ status, onPause, onResume, onReset, onToggleReorder, shareUrl }) {
   const [copied, setCopied] = useState(false);
 
   async function copyLink() {
@@ -18,15 +37,31 @@ export function Controls({ status, onPause, onResume, onReset, onToggleReorder, 
   return (
     <div className="controls">
       {status === 'running' ? (
-        <button className="btn-primary" onClick={onPause}>Pause</button>
+        <button className="btn-primary btn-icon" aria-label="Pause" onClick={onPause}>
+          <Icon><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></Icon>
+        </button>
       ) : (
-        <button className="btn-primary" onClick={onResume}>Resume</button>
+        <button className="btn-primary btn-icon" aria-label="Resume" onClick={onResume}>
+          <Icon><path d="M8 5.5v13a.5.5 0 0 0 .77.42l10-6.5a.5.5 0 0 0 0-.84l-10-6.5A.5.5 0 0 0 8 5.5z" /></Icon>
+        </button>
       )}
       <button onClick={handleReset}>Reset</button>
       <button onClick={onToggleReorder} disabled={status !== 'paused'}>
-        {reordering ? 'Done Editing' : 'Edit Players'}
+        Edit Players
       </button>
-      <button onClick={copyLink}>{copied ? 'Copied!' : 'Link to Share'}</button>
+      <button className="btn-with-icon" onClick={copyLink}>
+        <StrokeIcon>
+          {copied ? (
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          ) : (
+            <>
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+            </>
+          )}
+        </StrokeIcon>
+        {copied ? 'Copied!' : 'Copy Link'}
+      </button>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formatMinutes, parseMinutes } from '../state/minutes';
 
 function ReorderRow({
-  player, dragging, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
+  player, dragging, slot, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
   onRename, onSetTime, handleDisabled,
 }) {
   const [draft, setDraft] = useState(player.name);
@@ -39,7 +39,7 @@ function ReorderRow({
   }
 
   return (
-    <li ref={rowRef} className={`reorder-row${dragging ? ' dragging' : ''}`}>
+    <li ref={rowRef} style={{ order: slot }} className={`reorder-row${dragging ? ' dragging' : ''}`}>
       <button
         type="button"
         className="drag-handle"
@@ -50,7 +50,14 @@ function ReorderRow({
         onPointerUp={onHandlePointerUp}
         onPointerCancel={onHandlePointerUp}
       >
-        ⠿
+        <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">
+          {[2, 8, 14].map((cy) => (
+            <g key={cy}>
+              <circle cx="2" cy={cy} r="1.5" />
+              <circle cx="8" cy={cy} r="1.5" />
+            </g>
+          ))}
+        </svg>
       </button>
       <input
         type="text"
@@ -99,12 +106,15 @@ function dragTransform(dy) {
 export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
   const [order, setOrder] = useState(() => players.map((p) => p.id));
   const [draggingId, setDraggingId] = useState(null);
+  // DOM order held fixed for the length of a drag (see the render below).
+  const [frozenIds, setFrozenIds] = useState(null);
 
   const rowRefs = useRef({});
   const orderRef = useRef(order);
   const dragRef = useRef(null); // { id, grabY, grabTop, top, dy, startOrder }
   const rowTopsRef = useRef({}); // last laid-out offsetTop per row, for FLIP
   const pendingOrderRef = useRef(null);
+  const glideRef = useRef(null); // { id, dy } drop animation, started after the commit
   const [settleTick, setSettleTick] = useState(0);
 
   function applyOrder(next) {
@@ -157,6 +167,18 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
       }
       rowTopsRef.current[id] = top;
     }
+
+    // Start the drop glide only now: releasing the row un-freezes the DOM
+    // order, and moving the <li> would cancel an animation started earlier.
+    const glide = glideRef.current;
+    const glideEl = glide && rowRefs.current[glide.id];
+    if (glideEl) {
+      glideEl.animate(
+        [{ transform: dragTransform(glide.dy) }, { transform: 'none' }],
+        { duration: 160, easing: 'ease-out' },
+      );
+    }
+    glideRef.current = null;
   });
 
   const playersById = Object.fromEntries(players.map((p) => [p.id, p]));
@@ -173,6 +195,7 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
       dy: 0,
       startOrder: orderRef.current,
     };
+    setFrozenIds(orderRef.current);
     setDraggingId(id);
   }
 
@@ -183,10 +206,9 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
     if (!el) return;
 
     // The row follows the pointer exactly, clamped to the list.
-    const rows = orderRef.current.map((id) => rowRefs.current[id]).filter(Boolean);
+    const rows = Object.values(rowRefs.current).filter(Boolean);
     const minTop = Math.min(...rows.map((r) => r.offsetTop));
-    const lastRow = rows[rows.length - 1];
-    const maxTop = lastRow.offsetTop + lastRow.offsetHeight - el.offsetHeight;
+    const maxTop = Math.max(...rows.map((r) => r.offsetTop + r.offsetHeight)) - el.offsetHeight;
     drag.top = Math.min(maxTop, Math.max(minTop, drag.grabTop + (e.clientY - drag.grabY)));
     drag.dy = drag.top - el.offsetTop;
     el.style.transform = dragTransform(drag.dy);
@@ -214,15 +236,11 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
 
     // Glide from where the row was released into its slot.
     const el = rowRefs.current[drag.id];
-    if (el) {
-      el.style.transform = '';
-      el.animate(
-        [{ transform: dragTransform(drag.dy) }, { transform: 'none' }],
-        { duration: 160, easing: 'ease-out' },
-      );
-    }
+    if (el) el.style.transform = '';
+    glideRef.current = { id: drag.id, dy: drag.dy };
 
     setDraggingId(null);
+    setFrozenIds(null);
     const next = orderRef.current;
     if (next.some((id, i) => id !== drag.startOrder[i])) {
       pendingOrderRef.current = next;
@@ -232,9 +250,14 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
 
   const handleDisabled = players.length < 2;
 
+  // Rows are laid out with CSS `order`, and their DOM order stays put while a
+  // drag is in flight. Moving the dragged <li> in the DOM would drop its pointer
+  // capture and strand the gesture (this is what broke dragging downwards).
+  const domIds = frozenIds ?? order;
+
   return (
     <ul className="reorder-list">
-      {order.map((id) => {
+      {domIds.map((id) => {
         const player = playersById[id];
         if (!player) return null;
         return (
@@ -242,6 +265,7 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
             key={id}
             player={player}
             dragging={draggingId === id}
+            slot={order.indexOf(id)}
             rowRef={(el) => { rowRefs.current[id] = el; }}
             onHandlePointerDown={(e) => handlePointerDown(e, id)}
             onHandlePointerMove={handlePointerMove}
