@@ -1,8 +1,10 @@
 import { useLayoutEffect, useRef } from 'react';
 
 const MAX_MINUTES = 99;
+const SECONDS_STEP = 5;
 
-function Wheel({ label, unit, count, value, onChange }) {
+// `value` and `onChange` deal in item indexes; each item shows index * step.
+function Wheel({ label, unit, count, step = 1, value, onChange }) {
   const ref = useRef(null);
 
   function itemHeight() {
@@ -47,8 +49,8 @@ function Wheel({ label, unit, count, value, onChange }) {
         tabIndex={0}
         aria-label={label}
         aria-valuemin={0}
-        aria-valuemax={count - 1}
-        aria-valuenow={value}
+        aria-valuemax={(count - 1) * step}
+        aria-valuenow={value * step}
         onScroll={handleScroll}
         onKeyDown={handleKeyDown}
       >
@@ -58,7 +60,7 @@ function Wheel({ label, unit, count, value, onChange }) {
             className={`wheel-item${i === value ? ' selected' : ''}`}
             onClick={() => select(i)}
           >
-            {i}
+            {i * step}
           </div>
         ))}
       </div>
@@ -67,11 +69,12 @@ function Wheel({ label, unit, count, value, onChange }) {
   );
 }
 
-// iOS-style timer picker: one scroll-snapping wheel for minutes, one for seconds.
+// iOS-style timer picker: one scroll-snapping wheel for minutes, one for seconds (in 5-second steps).
 export function TimeWheelPicker({ valueMs, onChange, disabled }) {
   const totalSeconds = Math.round(valueMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
+  const secondsIndex = Math.round(seconds / SECONDS_STEP) % (60 / SECONDS_STEP);
 
   return (
     <div className={`time-wheel${disabled ? ' disabled' : ''}`}>
@@ -81,8 +84,8 @@ export function TimeWheelPicker({ valueMs, onChange, disabled }) {
         onChange={(m) => onChange((m * 60 + seconds) * 1000)}
       />
       <Wheel
-        label="Seconds" unit="sec" count={60} value={seconds}
-        onChange={(s) => onChange((minutes * 60 + s) * 1000)}
+        label="Seconds" unit="sec" count={60 / SECONDS_STEP} step={SECONDS_STEP} value={secondsIndex}
+        onChange={(i) => onChange((minutes * 60 + i * SECONDS_STEP) * 1000)}
       />
     </div>
   );
