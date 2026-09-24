@@ -12,6 +12,7 @@ export function createInitialState({ playerNames, initialMs, decrementMs = 0 }) 
       id: crypto.randomUUID(),
       name,
       remainingMs: startingMs(initialMs, decrementMs, i),
+      playing: true,
     })),
     activePlayerIndex: 0,
     status: 'paused',
@@ -21,8 +22,20 @@ export function createInitialState({ playerNames, initialMs, decrementMs = 0 }) 
   };
 }
 
+// A player with no flag (a game made before players could sit out) is playing.
+function isPlaying(player) {
+  return player.playing !== false;
+}
+
+// The next player after the active one who is still in the rotation. Falls
+// back to the active player when nobody else is playing.
 function nextIndex(state) {
-  return (state.activePlayerIndex + 1) % state.players.length;
+  const count = state.players.length;
+  for (let step = 1; step <= count; step++) {
+    const index = (state.activePlayerIndex + step) % count;
+    if (isPlaying(state.players[index])) return index;
+  }
+  return state.activePlayerIndex;
 }
 
 // Time left for the player at `index` as of `nowMs`. Callers pass server-clock
@@ -76,6 +89,7 @@ export function reset(state) {
     players: state.players.map((p, i) => ({
       ...p,
       remainingMs: startingMs(state.initialMs, state.decrementMs ?? 0, i),
+      playing: true,
     })),
     activePlayerIndex: 0,
     status: 'paused',
@@ -83,8 +97,9 @@ export function reset(state) {
   };
 }
 
+// Allowed while the clock runs: the active player is followed by id, and their
+// clock (players[].remainingMs plus turnStartedAtMs) is untouched by the move.
 export function reorder(state, { newOrder }) {
-  if (state.status !== 'paused') throw new InvalidTransitionError('not paused');
   if (newOrder.length !== state.players.length) {
     throw new InvalidTransitionError('newOrder length mismatch');
   }
@@ -105,9 +120,42 @@ export function renamePlayer(state, { playerId, name }) {
   };
 }
 
-export function setPlayerTime(state, { playerId, remainingMs }) {
+// While the clock runs, the active player's displayed time is their stored time
+// minus the turn so far, so the stored value is set that much higher for the
+// display to read exactly `remainingMs` at `nowMs`.
+export function setPlayerTime(state, { playerId, remainingMs, nowMs }) {
+  const runningTurn = state.status === 'running' && state.turnStartedAtMs != null;
+  const elapsed = runningTurn ? Math.max(0, nowMs - state.turnStartedAtMs) : 0;
   return {
     ...state,
-    players: state.players.map((p) => (p.id === playerId ? { ...p, remainingMs } : p)),
+    players: state.players.map((p, i) => {
+      if (p.id !== playerId) return p;
+      return { ...p, remainingMs: i === state.activePlayerIndex ? remainingMs + elapsed : remainingMs };
+    }),
+  };
+}
+
+// Takes a player out of (or back into) the rotation. Taking out the player whose
+// turn it is ends that turn on the spot, charging what they have used.
+export function setPlayerPlaying(state, { playerId, playing, nowMs }) {
+  if (!state.players.some((p) => p.id === playerId)) {
+    throw new InvalidTransitionError('unknown player id');
+  }
+  const withFlag = (players) => players.map((p) => (p.id === playerId ? { ...p, playing } : p));
+
+  if (!playing && state.players.filter((p) => isPlaying(p) && p.id !== playerId).length === 0) {
+    throw new InvalidTransitionError('at least one player must keep playing');
+  }
+
+  const active = state.players[state.activePlayerIndex];
+  if (playing || active.id !== playerId) {
+    return { ...state, players: withFlag(state.players) };
+  }
+
+  const settled = { ...state, players: withFlag(deductElapsed(state, nowMs)) };
+  return {
+    ...settled,
+    activePlayerIndex: nextIndex(settled),
+    turnStartedAtMs: state.status === 'running' ? nowMs : null,
   };
 }

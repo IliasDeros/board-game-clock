@@ -41,7 +41,7 @@ function TimeDialog({ player, onSave, onCancel }) {
 
 function ReorderRow({
   player, dragging, slot, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
-  onRename, onSetTime, handleDisabled,
+  onRename, onSetTime, onSetPlaying, playing, canSitOut, handleDisabled,
 }) {
   const [draft, setDraft] = useState(player.name);
   const [focused, setFocused] = useState(false);
@@ -59,7 +59,7 @@ function ReorderRow({
   }
 
   return (
-    <li ref={rowRef} style={{ order: slot }} className={`reorder-row${dragging ? ' dragging' : ''}`}>
+    <li ref={rowRef} style={{ order: slot }} className={`reorder-row${dragging ? ' dragging' : ''}${playing ? '' : ' sitting-out'}`}>
       <button
         type="button"
         className="drag-handle"
@@ -77,6 +77,23 @@ function ReorderRow({
               <circle cx="8" cy={cy} r="1.5" />
             </g>
           ))}
+        </svg>
+      </button>
+      <button
+        type="button"
+        className="playing-toggle"
+        aria-label={`Include ${player.name} in the rotation`}
+        aria-pressed={playing}
+        // The last player still in the game can't be switched off.
+        disabled={playing && !canSitOut}
+        onClick={() => onSetPlaying(player.id, !playing)}
+      >
+        <svg
+          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+        >
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+          {playing ? <circle cx="12" cy="12" r="3" /> : <path d="M4 4l16 16" />}
         </svg>
       </button>
       <input
@@ -127,7 +144,7 @@ function dragTransform(dy) {
   return `translateY(${dy}px) scale(${DRAG_SCALE})`;
 }
 
-export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
+export function ReorderList({ players, onMove, onRename, onSetTime, onSetPlaying, onDone }) {
   const [order, setOrder] = useState(() => players.map((p) => p.id));
   const [draggingId, setDraggingId] = useState(null);
   // DOM order held fixed for the length of a drag (see the render below).
@@ -276,6 +293,7 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
   }
 
   const handleDisabled = players.length < 2;
+  const playingCount = players.filter((p) => p.playing !== false).length;
 
   // Rows are laid out with CSS `order`, and their DOM order stays put while a
   // drag is in flight. Moving the dragged <li> in the DOM would drop its pointer
@@ -299,6 +317,9 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
             onHandlePointerUp={handlePointerUp}
             onRename={onRename}
             onSetTime={onSetTime}
+            onSetPlaying={onSetPlaying}
+            playing={player.playing !== false}
+            canSitOut={playingCount > 1}
             handleDisabled={handleDisabled}
           />
         );

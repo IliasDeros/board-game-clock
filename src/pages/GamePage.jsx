@@ -46,10 +46,11 @@ export function GamePage() {
       )}
       {reordering ? (
         <ReorderList
-          players={game.players}
+          players={game.players.map((p, i) => ({ ...p, remainingMs: displayedRemainingMs(i) }))}
           onMove={(newOrder) => runAction(transactions.reorder(gameId, newOrder))}
           onRename={(playerId, name) => runAction(transactions.renamePlayer(gameId, playerId, name))}
           onSetTime={(playerId, remainingMs) => runAction(transactions.setPlayerTime(gameId, playerId, remainingMs))}
+          onSetPlaying={(playerId, playing) => runAction(transactions.setPlayerPlaying(gameId, playerId, playing))}
           onDone={() => setReordering(false)}
         />
       ) : (

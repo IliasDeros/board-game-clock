@@ -58,7 +58,7 @@ export function Controls({ status, onPause, onResume, onReset, onToggleReorder, 
         </button>
       )}
       <button {...pulse('reset')} onClick={press('reset', handleReset)}>Reset</button>
-      <button {...pulse('edit')} onClick={press('edit', onToggleReorder)} disabled={status !== 'paused'}>
+      <button {...pulse('edit')} onClick={press('edit', onToggleReorder)}>
         Edit Players
       </button>
       <button {...pulse('copy', 'btn-with-icon')} onClick={press('copy', copyLink)}>

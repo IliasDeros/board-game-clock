@@ -80,3 +80,7 @@ export function renamePlayer(gameId, playerId, name) {
 export function setPlayerTime(gameId, playerId, remainingMs) {
   return applyTransition(gameId, fsm.setPlayerTime, { playerId, remainingMs });
 }
+
+export function setPlayerPlaying(gameId, playerId, playing) {
+  return applyTransition(gameId, fsm.setPlayerPlaying, { playerId, playing });
+}

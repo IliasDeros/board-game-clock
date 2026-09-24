@@ -418,12 +418,14 @@ input, select {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-inset);
   position: relative;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease-out, filter 0.2s ease-out;
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
 }
 
+/* A player sitting out of the rotation: still visible, but not tappable. */
+.player-zone.sitting-out { opacity: 0.45; cursor: default; }
 .player-zone.active {
   background: var(--active-grad);
   border-color: var(--active-border);
@@ -477,7 +479,7 @@ input, select {
   100% { transform: scale(1); filter: brightness(1); }
 }
 
-/* While a finger is down on the active player, the zone leans toward the touch
+/* While a finger is down on a player, the zone leans toward the touch
    point (--tilt-x/--tilt-y are set from the pointer position) and sinks a little.
    On release the tilt flattens as the whole zone is pressed in, then it springs
    back: one motion that starts exactly where the lean left off. Every keyframe
@@ -543,6 +545,18 @@ input, select {
   color: var(--ink-soft);
 }
 .drag-handle:active { cursor: grabbing; }
+.playing-toggle {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  color: var(--accent-strong);
+}
+.reorder-row.sitting-out .playing-toggle { color: var(--ink-soft); }
+.reorder-row.sitting-out .reorder-name-input,
+.reorder-row.sitting-out .time-button { opacity: 0.5; }
 .reorder-name-input { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 500; }
 .reorder-row .time-button {
   flex: 0 0 4.5rem;
