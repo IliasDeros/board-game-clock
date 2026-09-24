@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formatMinutes, parseMinutes } from '../state/minutes';
 
 function ReorderRow({
-  player, index, dragging, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
+  player, dragging, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
   onRename, onSetTime, handleDisabled,
 }) {
   const [draft, setDraft] = useState(player.name);
@@ -45,7 +45,7 @@ function ReorderRow({
         className="drag-handle"
         aria-label="Drag to reorder"
         disabled={handleDisabled}
-        onPointerDown={(e) => onHandlePointerDown(e, index)}
+        onPointerDown={onHandlePointerDown}
         onPointerMove={onHandlePointerMove}
         onPointerUp={onHandlePointerUp}
         onPointerCancel={onHandlePointerUp}
@@ -89,78 +89,161 @@ function ReorderRow({
   );
 }
 
+const SETTLE_MS = 3000;
+const DRAG_SCALE = 1.02;
+
+function dragTransform(dy) {
+  return `translateY(${dy}px) scale(${DRAG_SCALE})`;
+}
+
 export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
   const [order, setOrder] = useState(() => players.map((p) => p.id));
-  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
 
   const rowRefs = useRef({});
-  const dragStartOrderRef = useRef(order);
+  const orderRef = useRef(order);
+  const dragRef = useRef(null); // { id, grabY, grabTop, top, dy, startOrder }
+  const rowTopsRef = useRef({}); // last laid-out offsetTop per row, for FLIP
+  const pendingOrderRef = useRef(null);
+  const [settleTick, setSettleTick] = useState(0);
+
+  function applyOrder(next) {
+    orderRef.current = next;
+    setOrder(next);
+  }
 
   // Re-sync from live props, but never while a drag gesture is in flight --
   // a Firestore update mid-drag shouldn't yank the item out from under the
-  // user's finger.
+  // user's finger. After a drop, keep the local order until the server
+  // catches up so the row doesn't flash back to its old slot.
   useEffect(() => {
-    if (draggingIndex === null) {
-      setOrder(players.map((p) => p.id));
+    if (draggingId !== null) return;
+    const ids = players.map((p) => p.id);
+    const pending = pendingOrderRef.current;
+    if (pending) {
+      if (ids.every((id, i) => id === pending[i])) pendingOrderRef.current = null;
+      else return;
     }
-  }, [players, draggingIndex]);
+    applyOrder(ids);
+  }, [players, draggingId, settleTick]);
+
+  // Give up waiting for the server if a reorder never shows up in the props.
+  useEffect(() => {
+    if (draggingId !== null || !pendingOrderRef.current) return undefined;
+    const timer = setTimeout(() => {
+      pendingOrderRef.current = null;
+      setSettleTick((t) => t + 1);
+    }, SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [draggingId]);
+
+  // After every layout: slide rows that moved to their new slot (FLIP) and
+  // keep the dragged row pinned under the pointer.
+  useLayoutEffect(() => {
+    const drag = dragRef.current;
+    for (const id of orderRef.current) {
+      const el = rowRefs.current[id];
+      if (!el) continue;
+      const top = el.offsetTop;
+      const prev = rowTopsRef.current[id];
+      if (drag && id === drag.id) {
+        drag.dy = drag.top - top;
+        el.style.transform = dragTransform(drag.dy);
+      } else if (prev !== undefined && prev !== top) {
+        el.animate(
+          [{ transform: `translateY(${prev - top}px)` }, { transform: 'translateY(0)' }],
+          { duration: 180, easing: 'ease-out' },
+        );
+      }
+      rowTopsRef.current[id] = top;
+    }
+  });
 
   const playersById = Object.fromEntries(players.map((p) => [p.id, p]));
 
-  function handlePointerDown(e, index) {
-    e.target.setPointerCapture(e.pointerId);
-    dragStartOrderRef.current = order;
-    setDraggingIndex(index);
+  function handlePointerDown(e, id) {
+    const el = rowRefs.current[id];
+    if (!el) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      id,
+      grabY: e.clientY,
+      grabTop: el.offsetTop,
+      top: el.offsetTop,
+      dy: 0,
+      startOrder: orderRef.current,
+    };
+    setDraggingId(id);
   }
 
   function handlePointerMove(e) {
-    if (draggingIndex === null) return;
-    const draggedId = order[draggingIndex];
-    if (!draggedId) return;
+    const drag = dragRef.current;
+    if (!drag) return;
+    const el = rowRefs.current[drag.id];
+    if (!el) return;
 
-    // Find the row whose vertical midpoint the pointer has crossed.
-    let targetIndex = order.length - 1;
-    for (let i = 0; i < order.length; i++) {
-      const el = rowRefs.current[order[i]];
-      if (!el) continue;
-      const rect = el.getBoundingClientRect();
-      const mid = rect.top + rect.height / 2;
-      if (e.clientY < mid) {
-        targetIndex = i;
-        break;
-      }
-    }
+    // The row follows the pointer exactly, clamped to the list.
+    const rows = orderRef.current.map((id) => rowRefs.current[id]).filter(Boolean);
+    const minTop = Math.min(...rows.map((r) => r.offsetTop));
+    const lastRow = rows[rows.length - 1];
+    const maxTop = lastRow.offsetTop + lastRow.offsetHeight - el.offsetHeight;
+    drag.top = Math.min(maxTop, Math.max(minTop, drag.grabTop + (e.clientY - drag.grabY)));
+    drag.dy = drag.top - el.offsetTop;
+    el.style.transform = dragTransform(drag.dy);
 
-    if (targetIndex !== draggingIndex) {
-      const newOrder = [...order];
-      [newOrder[draggingIndex], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[draggingIndex]];
-      setOrder(newOrder);
-      setDraggingIndex(targetIndex);
+    // Drop into the slot the dragged row's centre has reached: it takes a
+    // neighbour's place once it is over half of it, not only at the midpoint.
+    const center = drag.top + el.offsetHeight / 2;
+    const others = orderRef.current.filter((id) => id !== drag.id);
+    const targetIndex = others.filter((id) => {
+      const other = rowRefs.current[id];
+      return other && other.offsetTop + other.offsetHeight / 2 < center;
+    }).length;
+
+    if (orderRef.current[targetIndex] !== drag.id) {
+      const next = [...others];
+      next.splice(targetIndex, 0, drag.id);
+      applyOrder(next);
     }
   }
 
   function handlePointerUp() {
-    if (draggingIndex === null) return;
-    setDraggingIndex(null);
-    const changed = order.some((id, i) => id !== dragStartOrderRef.current[i]);
-    if (changed) onMove(order);
+    const drag = dragRef.current;
+    if (!drag) return;
+    dragRef.current = null;
+
+    // Glide from where the row was released into its slot.
+    const el = rowRefs.current[drag.id];
+    if (el) {
+      el.style.transform = '';
+      el.animate(
+        [{ transform: dragTransform(drag.dy) }, { transform: 'none' }],
+        { duration: 160, easing: 'ease-out' },
+      );
+    }
+
+    setDraggingId(null);
+    const next = orderRef.current;
+    if (next.some((id, i) => id !== drag.startOrder[i])) {
+      pendingOrderRef.current = next;
+      onMove(next);
+    }
   }
 
   const handleDisabled = players.length < 2;
 
   return (
     <ul className="reorder-list">
-      {order.map((id, index) => {
+      {order.map((id) => {
         const player = playersById[id];
         if (!player) return null;
         return (
           <ReorderRow
             key={id}
             player={player}
-            index={index}
-            dragging={draggingIndex === index}
+            dragging={draggingId === id}
             rowRef={(el) => { rowRefs.current[id] = el; }}
-            onHandlePointerDown={handlePointerDown}
+            onHandlePointerDown={(e) => handlePointerDown(e, id)}
             onHandlePointerMove={handlePointerMove}
             onHandlePointerUp={handlePointerUp}
             onRename={onRename}

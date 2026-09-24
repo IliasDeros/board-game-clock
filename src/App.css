@@ -296,12 +296,11 @@ input, select {
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
 }
 .reorder-row.dragging {
   background: var(--glass-strong);
   box-shadow: var(--shadow-soft);
-  transform: scale(1.02);
   z-index: 1;
   position: relative;
 }
