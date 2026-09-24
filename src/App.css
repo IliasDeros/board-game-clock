@@ -192,7 +192,6 @@ input, select {
   color: var(--ink-soft);
 }
 .join-card { gap: 0.75rem; }
-.join-empty { margin: 0; }
 .join-list {
   list-style: none;
   margin: 0;
