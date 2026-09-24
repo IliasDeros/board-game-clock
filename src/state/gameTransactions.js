@@ -11,6 +11,7 @@ function docToState(data) {
     status: data.status,
     turnStartedAtMs: data.turnStartedAt ? data.turnStartedAt.toMillis() : null,
     initialMs: data.initialMs,
+    decrementMs: data.decrementMs ?? 0,
   };
 }
 

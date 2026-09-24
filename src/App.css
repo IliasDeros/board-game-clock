@@ -216,6 +216,14 @@ input, select {
   /* Sits on top of the wheel: let drags and scrolls pass through to it. */
   pointer-events: none;
 }
+.advanced-options summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  user-select: none;
+}
+.advanced-options[open] summary { margin-bottom: 0.75rem; }
+.field-hint { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--ink-soft); }
 .form-error {
   color: var(--ink-soft);
   font-size: 0.85rem;

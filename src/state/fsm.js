@@ -2,17 +2,24 @@ export class InvalidTransitionError extends Error {}
 
 export const SERVER_NOW = 'SERVER_NOW';
 
-export function createInitialState({ playerNames, initialMs }) {
+// Starting time for the player at `index`: each seat after the first gets
+// `decrementMs` less than the one before it (never below zero).
+export function startingMs(initialMs, decrementMs, index) {
+  return Math.max(0, initialMs - index * decrementMs);
+}
+
+export function createInitialState({ playerNames, initialMs, decrementMs = 0 }) {
   return {
-    players: playerNames.map((name) => ({
+    players: playerNames.map((name, i) => ({
       id: crypto.randomUUID(),
       name,
-      remainingMs: initialMs,
+      remainingMs: startingMs(initialMs, decrementMs, i),
     })),
     activePlayerIndex: 0,
     status: 'paused',
     turnStartedAtMs: null,
     initialMs,
+    decrementMs,
   };
 }
 
@@ -59,7 +66,10 @@ export function resume(state) {
 export function reset(state) {
   return {
     ...state,
-    players: state.players.map((p) => ({ ...p, remainingMs: state.initialMs })),
+    players: state.players.map((p, i) => ({
+      ...p,
+      remainingMs: startingMs(state.initialMs, state.decrementMs ?? 0, i),
+    })),
     activePlayerIndex: 0,
     status: 'paused',
     turnStartedAtMs: null,
