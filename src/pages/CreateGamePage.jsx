@@ -5,7 +5,9 @@ import { HeroDemo } from '../components/HeroDemo';
 import { formatMinutes } from '../state/minutes';
 
 const PLAYER_COUNT_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 2); // 2..10
-const MINUTES_OPTIONS = [60, 120, 180, 210, 240, 300, 600, 900, 1800].map((seconds) => seconds * 1000);
+const MINUTES_OPTIONS = [
+  30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 420, 480, 540, 600, 900, 1800,
+].map((seconds) => seconds * 1000);
 const DEFAULT_INITIAL_MS = 120000;
 
 export function CreateGamePage() {
