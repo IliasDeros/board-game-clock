@@ -17,6 +17,15 @@ export function formatAgo(ageMs) {
   return `${Math.floor(seconds / 60)} min ago`;
 }
 
+// 120000 -> "2:00", 3725000 -> "1:02:05"
+export function formatDuration(ms) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+}
+
 export async function fetchRecentGames() {
   await serverClockReady();
   const since = Timestamp.fromMillis(serverNowMs() - RECENT_WINDOW_MS - QUERY_SLACK_MS);
@@ -25,6 +34,11 @@ export async function fetchRecentGames() {
   );
   return snap.docs.map((d) => {
     const data = d.data({ serverTimestamps: 'estimate' });
-    return { id: d.id, playerCount: data.players.length, createdAtMs: data.createdAt.toMillis() };
+    return {
+      id: d.id,
+      playerCount: data.players.length,
+      initialMs: data.initialMs,
+      createdAtMs: data.createdAt.toMillis(),
+    };
   });
 }

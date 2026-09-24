@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRecentGames } from '../hooks/useRecentGames';
-import { formatAgo } from '../state/recentGames';
+import { formatAgo, formatDuration } from '../state/recentGames';
 
 export function JoinGameCard() {
   const games = useRecentGames();
@@ -15,7 +15,7 @@ export function JoinGameCard() {
           {games.map((g) => (
             <li key={g.id}>
               <Link className="join-item" to={`/game/${g.id}`}>
-                <span className="join-players">{g.playerCount} players</span>
+                <span className="join-players">{g.playerCount}p, {formatDuration(g.initialMs)}</span>
                 <span className="join-age">{formatAgo(g.ageMs)}</span>
               </Link>
             </li>
