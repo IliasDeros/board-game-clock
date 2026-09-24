@@ -4,7 +4,10 @@ import { formatMinutes } from '../state/minutes';
 import { TimeWheelPicker } from './TimeWheelPicker';
 
 function TimeDialog({ player, onSave, onCancel }) {
-  const [draft, setDraft] = useState(player.remainingMs);
+  // The wheels can't show a negative time, so a player who is out of time
+  // starts from 0:00.
+  const [draft, setDraft] = useState(Math.max(0, player.remainingMs));
+  const [changed, setChanged] = useState(false);
 
   return createPortal(
     <div className="modal-backdrop" onClick={onCancel}>
@@ -15,14 +18,17 @@ function TimeDialog({ player, onSave, onCancel }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="modal-title">{player.name}</h2>
-        <TimeWheelPicker valueMs={draft} onChange={setDraft} />
+        <TimeWheelPicker
+          valueMs={draft}
+          secondsStep={1}
+          onChange={(ms) => { setDraft(ms); setChanged(true); }}
+        />
         <div className="modal-actions">
           <button type="button" onClick={onCancel}>Cancel</button>
           <button
             type="button"
             className="btn-primary"
-            disabled={draft <= 0}
-            onClick={() => onSave(draft)}
+            onClick={() => (changed ? onSave(draft) : onCancel())}
           >
             Set
           </button>

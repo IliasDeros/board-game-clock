@@ -21,6 +21,7 @@ function StrokeIcon({ children }) {
 
 export function Controls({ status, onPause, onResume, onReset, onToggleReorder, shareUrl }) {
   const [copied, setCopied] = useState(false);
+  const [pressed, setPressed] = useState(null);
 
   async function copyLink() {
     await navigator.clipboard.writeText(shareUrl);
@@ -34,22 +35,33 @@ export function Controls({ status, onPause, onResume, onReset, onToggleReorder, 
     }
   }
 
+  // Acknowledge each tap at once; the state only changes when the server confirms.
+  // `name` is the button's own class list; the result adds the press pulse while
+  // this button is the one that was pressed.
+  function pulse(key, name = '') {
+    return {
+      className: `${name}${pressed === key ? ' pressed' : ''}`.trim(),
+      onAnimationEnd: () => setPressed(null),
+    };
+  }
+  const press = (key, action) => () => { setPressed(key); action(); };
+
   return (
     <div className="controls">
       {status === 'running' ? (
-        <button className="btn-primary btn-icon" aria-label="Pause" onClick={onPause}>
+        <button {...pulse('playPause', 'btn-primary btn-icon')} aria-label="Pause" onClick={press('playPause', onPause)}>
           <Icon><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></Icon>
         </button>
       ) : (
-        <button className="btn-primary btn-icon" aria-label="Resume" onClick={onResume}>
+        <button {...pulse('playPause', 'btn-primary btn-icon')} aria-label="Resume" onClick={press('playPause', onResume)}>
           <Icon><path d="M8 5.5v13a.5.5 0 0 0 .77.42l10-6.5a.5.5 0 0 0 0-.84l-10-6.5A.5.5 0 0 0 8 5.5z" /></Icon>
         </button>
       )}
-      <button onClick={handleReset}>Reset</button>
-      <button onClick={onToggleReorder} disabled={status !== 'paused'}>
+      <button {...pulse('reset')} onClick={press('reset', handleReset)}>Reset</button>
+      <button {...pulse('edit')} onClick={press('edit', onToggleReorder)} disabled={status !== 'paused'}>
         Edit Players
       </button>
-      <button className="btn-with-icon" onClick={copyLink}>
+      <button {...pulse('copy', 'btn-with-icon')} onClick={press('copy', copyLink)}>
         <StrokeIcon>
           {copied ? (
             <path d="M5 12.5l4.5 4.5L19 7.5" />

@@ -106,7 +106,7 @@ button {
 button:hover:not(:disabled) { transform: translateY(-1px); }
 .btn-icon, .btn-with-icon { display: inline-flex; align-items: center; justify-content: center; }
 .btn-with-icon { gap: 0.45rem; }
-.btn-icon { padding: 0.65rem 1.5rem; }
+.btn-icon { padding: 0.65rem 1.5rem; min-width: 7rem; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button:active:not(:disabled) { transform: translateY(0); }
 
@@ -433,7 +433,7 @@ input, select {
   background: var(--paused-active-grad);
   border-color: var(--paused-active-border);
 }
-.player-zone.negative {
+.player-zone.active.negative {
   background: var(--negative-grad);
   border-color: var(--negative-border);
 }
@@ -466,6 +466,41 @@ input, select {
 }
 @media (prefers-reduced-motion: reduce) {
   .player-prompt { animation: none; }
+}
+
+/* Acknowledges a tap that ends a turn or presses one of the bottom buttons; the state itself
+   changes once the server confirms. */
+.controls button.pressed { animation: turn-press 0.3s ease-out; --press-scale: 0.88; }
+@keyframes turn-press {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(var(--press-scale, 0.97)); filter: brightness(0.9); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* While a finger is down on the active player, the zone leans toward the touch
+   point (--tilt-x/--tilt-y are set from the pointer position) and sinks a little.
+   On release the tilt flattens as the whole zone is pressed in, then it springs
+   back: one motion that starts exactly where the lean left off. Every keyframe
+   lists the same transform functions so they interpolate. */
+.player-zone.pressing {
+  transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(-14px);
+  filter: brightness(0.95);
+  transition: transform 0.1s ease-out, filter 0.1s ease-out, background 0.2s ease, border-color 0.2s ease;
+}
+.player-zone.pressed { animation: zone-press 0.35s ease-out; }
+@keyframes zone-press {
+  0% { transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(-14px); filter: brightness(0.95); }
+  40% { transform: perspective(700px) rotateX(0deg) rotateY(0deg) translateZ(-30px); filter: brightness(0.88); }
+  100% { transform: perspective(700px) rotateX(0deg) rotateY(0deg) translateZ(0); filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-zone.pressing { transform: none; }
+  .player-zone.pressed, .controls button.pressed { animation-name: turn-press-still; }
+  @keyframes turn-press-still {
+    0%, 100% { filter: brightness(1); }
+    35% { filter: brightness(0.9); }
+  }
 }
 
 .controls {

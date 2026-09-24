@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 
 const MAX_MINUTES = 99;
-const SECONDS_STEP = 5;
+const DEFAULT_SECONDS_STEP = 5;
 
 // `value` and `onChange` deal in item indexes; each item shows index * step.
 function Wheel({ label, unit, count, step = 1, value, onChange }) {
@@ -69,12 +69,14 @@ function Wheel({ label, unit, count, step = 1, value, onChange }) {
   );
 }
 
-// iOS-style timer picker: one scroll-snapping wheel for minutes, one for seconds (in 5-second steps).
-export function TimeWheelPicker({ valueMs, onChange, disabled }) {
+// iOS-style timer picker: one scroll-snapping wheel for minutes, one for seconds
+// (in 5-second steps unless `secondsStep` says otherwise).
+export function TimeWheelPicker({ valueMs, onChange, disabled, secondsStep = DEFAULT_SECONDS_STEP }) {
   const totalSeconds = Math.round(valueMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  const secondsIndex = Math.round(seconds / SECONDS_STEP) % (60 / SECONDS_STEP);
+  const secondsCount = 60 / secondsStep;
+  const secondsIndex = Math.round(seconds / secondsStep) % secondsCount;
 
   return (
     <div className={`time-wheel${disabled ? ' disabled' : ''}`}>
@@ -84,8 +86,8 @@ export function TimeWheelPicker({ valueMs, onChange, disabled }) {
         onChange={(m) => onChange((m * 60 + seconds) * 1000)}
       />
       <Wheel
-        label="Seconds" unit="sec" count={60 / SECONDS_STEP} step={SECONDS_STEP} value={secondsIndex}
-        onChange={(i) => onChange((minutes * 60 + i * SECONDS_STEP) * 1000)}
+        label="Seconds" unit="sec" count={secondsCount} step={secondsStep} value={secondsIndex}
+        onChange={(i) => onChange((minutes * 60 + i * secondsStep) * 1000)}
       />
     </div>
   );
