@@ -3,7 +3,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /games/{gameId} {
       allow get: if true;
-      allow list: if false;
+      // The Join game box lists games created in the last couple of minutes.
+      // Rules are not filters: the query itself must be bounded by createdAt.
+      allow list: if request.query.limit <= 20
+        && resource.data.createdAt > request.time - duration.value(3, 'm');
       allow write: if isValidGame(request.resource.data);
       allow delete: if false;
     }

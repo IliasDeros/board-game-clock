@@ -20,7 +20,6 @@ export function GamePage() {
         if (result === 'ignored') {
           // The server rejected the action against its newer state, so this
           // device was out of date. Pull the latest state instead of staying stuck.
-          setActionError('The game had already changed, so that action was skipped. Showing the latest state.');
           refresh();
         }
       })

@@ -4,6 +4,7 @@ import { createGame } from '../state/createGame';
 import { HeroDemo } from '../components/HeroDemo';
 import { TimeWheelPicker } from '../components/TimeWheelPicker';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { JoinGameCard } from '../components/JoinGameCard';
 
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 10;
@@ -87,6 +88,7 @@ export function CreateGamePage() {
         {error && <p className="form-error">{error}</p>}
         <button type="submit" className="btn-primary" disabled={busy || initialMs <= 0}>Create clock</button>
       </form>
+      <JoinGameCard />
     </div>
   );
 }
