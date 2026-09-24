@@ -54,6 +54,7 @@ export function GamePage() {
               displayedMs={displayedRemainingMs(player, index)}
               status={game.status}
               onTap={(playerId) => runAction(transactions.endTurn(gameId, playerId))}
+              onResume={() => runAction(transactions.resume(gameId))}
             />
           ))}
         </div>
