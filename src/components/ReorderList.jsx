@@ -1,5 +1,37 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { formatMinutes, parseMinutes } from '../state/minutes';
+import { createPortal } from 'react-dom';
+import { formatMinutes } from '../state/minutes';
+import { TimeWheelPicker } from './TimeWheelPicker';
+
+function TimeDialog({ player, onSave, onCancel }) {
+  const [draft, setDraft] = useState(player.remainingMs);
+
+  return createPortal(
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div
+        className="modal"
+        role="dialog"
+        aria-label={`Time for ${player.name}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="modal-title">{player.name}</h2>
+        <TimeWheelPicker valueMs={draft} onChange={setDraft} />
+        <div className="modal-actions">
+          <button type="button" onClick={onCancel}>Cancel</button>
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={draft <= 0}
+            onClick={() => onSave(draft)}
+          >
+            Set
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
 
 function ReorderRow({
   player, dragging, slot, rowRef, onHandlePointerDown, onHandlePointerMove, onHandlePointerUp,
@@ -7,9 +39,7 @@ function ReorderRow({
 }) {
   const [draft, setDraft] = useState(player.name);
   const [focused, setFocused] = useState(false);
-  const shownTime = formatMinutes(player.remainingMs);
-  const [timeDraft, setTimeDraft] = useState(shownTime);
-  const [timeFocused, setTimeFocused] = useState(false);
+  const [editingTime, setEditingTime] = useState(false);
 
   // Keep the local draft in sync with the live prop value, but only while
   // the field isn't focused -- otherwise an in-flight edit from another
@@ -18,24 +48,8 @@ function ReorderRow({
     if (!focused) setDraft(player.name);
   }, [player.name, focused]);
 
-  // Same guard as the name field, for the live remaining-time value.
-  useEffect(() => {
-    if (!timeFocused) setTimeDraft(shownTime);
-  }, [shownTime, timeFocused]);
-
   function commit() {
     if (draft !== player.name) onRename(player.id, draft);
-  }
-
-  function commitTime() {
-    const ms = parseMinutes(timeDraft);
-    // Unparseable or untouched: snap back to the live value rather than
-    // sending a bad update (or rounding the exact remaining time).
-    if (ms === null || timeDraft.trim() === shownTime) {
-      setTimeDraft(shownTime);
-      return;
-    }
-    onSetTime(player.id, ms);
   }
 
   return (
@@ -76,22 +90,25 @@ function ReorderRow({
           }
         }}
       />
-      <input
-        type="text"
-        inputMode="decimal"
-        className="minutes-input"
-        aria-label={`Minutes for ${player.name}`}
-        value={timeDraft}
-        onChange={(e) => setTimeDraft(e.target.value)}
-        onFocus={() => setTimeFocused(true)}
-        onBlur={() => {
-          setTimeFocused(false);
-          commitTime();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') e.target.blur();
-        }}
-      />
+      <button
+        type="button"
+        className="time-button"
+        aria-label={`Set time for ${player.name}`}
+        onClick={() => setEditingTime(true)}
+      >
+        {formatMinutes(player.remainingMs)}
+      </button>
+      {editingTime && (
+        <TimeDialog
+          player={player}
+          onCancel={() => setEditingTime(false)}
+          onSave={(ms) => {
+            setEditingTime(false);
+            // Untouched wheels leave the exact live value alone.
+            if (ms !== player.remainingMs) onSetTime(player.id, ms);
+          }}
+        />
+      )}
     </li>
   );
 }
