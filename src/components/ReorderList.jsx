@@ -98,6 +98,7 @@ function ReorderRow({
 
 const SETTLE_MS = 3000;
 const DRAG_SCALE = 1.02;
+const OVERSHOOT = 0.3; // fraction of a row the dragged row may stick out past either end
 
 function dragTransform(dy) {
   return `translateY(${dy}px) scale(${DRAG_SCALE})`;
@@ -207,8 +208,11 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
 
     // The row follows the pointer exactly, clamped to the list.
     const rows = Object.values(rowRefs.current).filter(Boolean);
-    const minTop = Math.min(...rows.map((r) => r.offsetTop));
-    const maxTop = Math.max(...rows.map((r) => r.offsetTop + r.offsetHeight)) - el.offsetHeight;
+    // It may overshoot either end a little so first/last place are easy to
+    // reach: at a hard clamp its centre would only *equal* the end row's centre.
+    const overshoot = el.offsetHeight * OVERSHOOT;
+    const minTop = Math.min(...rows.map((r) => r.offsetTop)) - overshoot;
+    const maxTop = Math.max(...rows.map((r) => r.offsetTop + r.offsetHeight)) - el.offsetHeight + overshoot;
     drag.top = Math.min(maxTop, Math.max(minTop, drag.grabTop + (e.clientY - drag.grabY)));
     drag.dy = drag.top - el.offsetTop;
     el.style.transform = dragTransform(drag.dy);
@@ -219,7 +223,7 @@ export function ReorderList({ players, onMove, onRename, onSetTime, onDone }) {
     const others = orderRef.current.filter((id) => id !== drag.id);
     const targetIndex = others.filter((id) => {
       const other = rowRefs.current[id];
-      return other && other.offsetTop + other.offsetHeight / 2 < center;
+      return other && other.offsetTop + other.offsetHeight / 2 <= center;
     }).length;
 
     if (orderRef.current[targetIndex] !== drag.id) {
